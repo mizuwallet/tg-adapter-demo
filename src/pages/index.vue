@@ -1,7 +1,7 @@
 <template>
   <div class="py-10 flex-col-axis-center gap-8"></div>
 
-  <span v-if="appStore.connecting">Loading...</span>
+  <span class="flex-center" v-if="appStore.connecting">Loading...</span>
 
   <div class="p-5 rounded-4 bg-white mx-4 text-black flex-col" v-if="!appStore.address">
     <div

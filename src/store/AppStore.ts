@@ -39,6 +39,7 @@ const useAppStore = defineStore('appStore', (): AppStore => {
       manifestURL: 'https://assets.mz.xyz/static/config/mizuwallet-connect-manifest.json',
     },
   });
+
   const aptPrice = ref(0);
   const balance = ref(0);
   const breakpoints = useBreakpoints(breakpointsTailwind);
