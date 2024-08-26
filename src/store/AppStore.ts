@@ -14,6 +14,7 @@ interface AppStore {
   mobileSet: ComputedRef<boolean>;
   walletCore: WalletCore;
   address: Ref<string | undefined>;
+  publicKey: Ref<string | undefined>;
   connecting: Ref<boolean>;
   connectModalOpen: Ref<boolean>;
   autoConnect: Ref<boolean>;
@@ -21,7 +22,7 @@ interface AppStore {
   balance: Ref<number>;
 
   fetchBalance: () => void;
-  converToUSDT: (amount: number | string | BigNumber, precision?: number) => string;
+  convertToUSDT: (amount: number | string | BigNumber, precision?: number) => string;
 
   swapConfig: Ref<SwapConfig>;
 }
@@ -30,13 +31,14 @@ const WALLET_NAME = 'AptosWalletName';
 
 const useAppStore = defineStore('appStore', (): AppStore => {
   const address = ref();
+  const publicKey = ref();
   const autoConnect = ref(false);
   const connecting = ref(false);
   const connectModalOpen = ref(false);
-  const walletCore = new WalletCore([], ['Petra', 'Mizu Wallet'], {
+  const walletCore = new WalletCore([], ['Mizu Wallet'], {
     network: Network.TESTNET,
     mizuwallet: {
-      manifestURL: 'https://assets.mz.xyz/static/config/mizuwallet-connect-manifest.json',
+      manifestURL: 'https://app.panora.exchange/mizuwallet-connect-manifest.json',
     },
   });
 
@@ -56,6 +58,7 @@ const useAppStore = defineStore('appStore', (): AppStore => {
   walletCore.on('connect', () => {
     window.localStorage.setItem(WALLET_NAME, walletCore.wallet?.name || '');
     address.value = walletCore.account?.address;
+    publicKey.value = walletCore.account?.publicKey as string;
     fetchBalance();
     walletCore.onAccountChange();
     walletCore.onNetworkChange();
@@ -82,7 +85,7 @@ const useAppStore = defineStore('appStore', (): AppStore => {
     }
   };
 
-  const converToUSDT = (amount: number | string | BigNumber, precision: number = 4) => {
+  const convertToUSDT = (amount: number | string | BigNumber, precision: number = 4) => {
     return numeral(new BigNumber(amount).times(aptPrice.value).toNumber() || 0)
       .format(`0,0.[${new Array(precision).fill(0).join('')}]a`)
       .toUpperCase();
@@ -113,13 +116,14 @@ const useAppStore = defineStore('appStore', (): AppStore => {
     connecting,
     connectModalOpen,
     address,
+    publicKey,
     walletCore,
     balance,
 
     swapConfig,
 
     fetchBalance,
-    converToUSDT,
+    convertToUSDT,
   };
 });
 

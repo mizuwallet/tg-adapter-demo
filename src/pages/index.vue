@@ -16,10 +16,15 @@
   </div>
   <div class="flex-col items-center gap-4" v-else>
     <span class="font-bold">{{ ShortAddress(appStore.address) }}</span>
+    <span class="font-bold" v-if="appStore.publicKey">{{ ShortAddress(appStore.publicKey) }}</span>
     <div class="flex-col-center gap-2 mt-10">
       <Button class="!w-fit" @click="signAndSubmitHandler" :loading="submitting">
         SignAndSubmitTransaction
       </Button>
+      <Button class="!w-fit" @click="signTransactionHandler" :loading="submitting">
+        Sign Transaction
+      </Button>
+      <Button class="!w-fit" @click="signMessageHandler" :loading="submitting">Sign Message</Button>
       <Button class="!w-fit" @click="disconnect">Disconnect</Button>
     </div>
   </div>
@@ -27,6 +32,7 @@
 
 <script lang="ts" setup>
   import { snackbarError, snackbarSuccess } from '@/components/Snackbar';
+  import { AptosClient } from '@/config';
   import useWallets from '@/hooks/useWallets';
   import Button from '@/lib/Button.vue';
   import useAppStore from '@/store/AppStore';
@@ -64,6 +70,47 @@
       if (result.hash) {
         snackbarSuccess(`Transaction is successful: ${result.hash}`);
       }
+    } catch (err: any) {
+      console.log(err);
+      snackbarError(err.message || err);
+    } finally {
+      submitting.value = false;
+    }
+  };
+
+  const signTransactionHandler = async () => {
+    if (submitting.value || !appStore.address) return;
+    try {
+      submitting.value = true;
+      const rawTransaction = await AptosClient.transaction.build.simple({
+        sender: appStore.address!,
+        data: {
+          function: '0x1::coin::transfer',
+          typeArguments: [APTOS_COIN],
+          functionArguments: [appStore.address, 1],
+        },
+      });
+
+      const result: any = await appStore.walletCore?.signTransaction(rawTransaction);
+      snackbarSuccess(`Transaction signed successfully: ${JSON.stringify(result)}`);
+    } catch (err: any) {
+      console.log(err);
+      snackbarError(err.message || err);
+    } finally {
+      submitting.value = false;
+    }
+  };
+
+  const signMessageHandler = async () => {
+    try {
+      submitting.value = true;
+
+      const result: any = await appStore.walletCore?.signMessage({
+        message:
+          "Hello from MizuWallet\nWhat's your name?\nwhat's your propose?\nQuick Fox Jump Over the Lazy DogQuick Fox Jump Over the Lazy DogQuick Fox Jump Over the Lazy Dog",
+        nonce: Date.now().toString(),
+      });
+      snackbarSuccess(`Message signed successfully: ${JSON.stringify(result)}`);
     } catch (err: any) {
       console.log(err);
       snackbarError(err.message || err);
